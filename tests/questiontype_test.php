@@ -287,6 +287,23 @@ final class questiontype_test extends \advanced_testcase {
         $this->assertEquals([1.0, 1.0, 0.0], array_column($loaded->choices, 'fraction'));
     }
 
+    public function test_editing_form_loads_for_new_question(): void {
+        $this->resetAfterTest(true);
+        $this->setAdminUser();
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $cat = $generator->create_question_category([]);
+        $question = new \stdClass();
+        $question->qtype = 'ddto_chill';
+        $question->category = $cat->id;
+        $question->createdby = 2;
+        $form = $this->get_editing_form($cat, $question);
+        $this->assertInstanceOf(qtype_ddto_chill_edit_form::class, $form);
+        $this->assertFalse($form->_form->elementExists('questiontext'));
+        $this->assertTrue($form->_form->elementExists('sourcetext'));
+        $this->assertTrue($form->_form->elementExists('questiontext[text]'));
+    }
+
     public function test_form_validation(): void {
         $this->resetAfterTest(true);
         $this->setAdminUser();

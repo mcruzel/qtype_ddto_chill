@@ -26,12 +26,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-/* Hide the core HTML question-text editor: authors use the source textarea. */
-.qtype-ddto-chill-form #fitem_id_questiontext,
-.qtype-ddto-chill-js #fitem_id_questiontext {
-    display: none;
-}
-
 .qtype-ddto-chill-sourcetext,
 textarea[name="sourcetext"] {
     width: 100%;

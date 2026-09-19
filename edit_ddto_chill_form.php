@@ -54,16 +54,27 @@ class qtype_ddto_chill_edit_form extends question_edit_form {
         $mform->updateAttributes(['class' => 'mform qtype-ddto-chill-form']);
         $this->reconstructed = $this->reconstruct_current_question();
 
-        $mform->addElement(
-            'textarea',
-            'sourcetext',
-            get_string('sourcetext', 'qtype_ddto_chill'),
-            [
-                'rows' => 6,
-                'cols' => 80,
-                'placeholder' => get_string('sourcetextplaceholder', 'qtype_ddto_chill'),
-                'class' => 'qtype-ddto-chill-sourcetext',
-            ]
+        // Parent already added a TinyMCE/Atto editor for questiontext. Authors type
+        // a plain sentence instead; questiontext HTML is generated on save.
+        // Leaving that editor in the page while CSS sets display:none prevents
+        // editor_tiny from resolving its Pending (the editor iframe never fires
+        // onload inside a display:none ancestor), so the Moodle loading overlay
+        // never goes away and the form appears to loop/blank.
+        $this->replace_questiontext_editor($mform);
+
+        $mform->insertElementBefore(
+            $mform->createElement(
+                'textarea',
+                'sourcetext',
+                get_string('sourcetext', 'qtype_ddto_chill'),
+                [
+                    'rows' => 6,
+                    'cols' => 80,
+                    'placeholder' => get_string('sourcetextplaceholder', 'qtype_ddto_chill'),
+                    'class' => 'qtype-ddto-chill-sourcetext',
+                ]
+            ),
+            'status'
         );
         $mform->setType('sourcetext', PARAM_RAW);
         $mform->addHelpButton('sourcetext', 'sourcetext', 'qtype_ddto_chill');
@@ -102,7 +113,7 @@ class qtype_ddto_chill_edit_form extends question_edit_form {
         $this->add_per_answer_fields(
             $mform,
             get_string('distractorno', 'qtype_ddto_chill', '{no}'),
-            null,
+            question_bank::fraction_options(),
             self::NUM_CHOICES_START,
             self::NUM_CHOICES_ADD
         );
@@ -146,6 +157,56 @@ class qtype_ddto_chill_edit_form extends question_edit_form {
         );
         $mform->addHelpButton('shuffleanswers', 'shuffleanswers', 'qtype_ddto_chill');
         $mform->setDefault('shuffleanswers', $this->get_default_value('shuffleanswers', 1));
+    }
+
+    /**
+     * Replace the core questiontext editor with hidden fields.
+     *
+     * Must run during definition (before toHtml), otherwise the editor JS is
+     * queued against a textarea that we then hide and the page spinner hangs.
+     *
+     * @param MoodleQuickForm $mform the form being built.
+     */
+    protected function replace_questiontext_editor($mform): void {
+        if ($mform->elementExists('questiontext')) {
+            $mform->removeElement('questiontext');
+        }
+        $mform->addElement('hidden', 'questiontext[text]', '');
+        $mform->setType('questiontext[text]', PARAM_RAW);
+        $mform->addElement('hidden', 'questiontext[format]', FORMAT_HTML);
+        $mform->setType('questiontext[format]', PARAM_INT);
+        $mform->addElement('hidden', 'questiontext[itemid]', 0);
+        $mform->setType('questiontext[itemid]', PARAM_INT);
+    }
+
+    /**
+     * Add distractor rows. Parent counts options->answers, which this qtype does not set.
+     *
+     * @param MoodleQuickForm $mform the form being built.
+     * @param string $label repeated row label, with {no}.
+     * @param mixed $gradeoptions unused (no per-distractor grade select).
+     * @param int $minoptions blank rows when creating a question.
+     * @param int $addoptions rows added by the PHP "add more" button.
+     */
+    #[\Override]
+    protected function add_per_answer_fields(&$mform, $label, $gradeoptions,
+            $minoptions = QUESTION_NUMANS_START, $addoptions = QUESTION_NUMANS_ADD) {
+        // question_edit_form does count($this->question->options->answers).
+        // We store gap words and distractors in options->choices, so answers is
+        // unset. On PHP 8.1+ count(null) is a TypeError and the edit page is blank.
+        if (isset($this->question->options)) {
+            $answers = [];
+            foreach ($this->question->options->choices ?? [] as $choice) {
+                if (!qtype_ddto_chill::is_correct_choice($choice->fraction)) {
+                    $answers[] = $choice;
+                }
+            }
+            $this->question->options->answers = $answers;
+            while (count($this->question->options->answers) < $minoptions) {
+                $this->question->options->answers[] = (object) ['answer' => '', 'fraction' => 0];
+            }
+        }
+        parent::add_per_answer_fields($mform, $label, $gradeoptions, $minoptions, $addoptions);
     }
 
     /**
@@ -318,6 +379,16 @@ class qtype_ddto_chill_edit_form extends question_edit_form {
         if ($reconstructed) {
             $question->sourcetext = $reconstructed->sourcetext;
             $question->gapselection = implode(',', $reconstructed->gapindices);
+        }
+
+        // Hidden questiontext[text] expects an editor-shaped array, not the DB string.
+        if (!is_array($question->questiontext ?? null)) {
+            $text = (string) ($question->questiontext ?? '');
+            $question->questiontext = [
+                'text' => $text,
+                'format' => $question->questiontextformat ?? FORMAT_HTML,
+                'itemid' => 0,
+            ];
         }
 
         if (!empty($question->options->choices)) {
