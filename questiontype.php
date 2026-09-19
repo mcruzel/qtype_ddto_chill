@@ -350,7 +350,9 @@ class qtype_ddto_chill extends question_type {
             $declaredformat = $format->trans_format($format->getpath($answer, ['@', 'format'], 'html'));
             $text = $ans->answer['text'];
             if ($declaredformat != FORMAT_PLAIN) {
-                $text = html_to_text($text, 0, false);
+                // Not html_to_text(): it renders <b> as upper case and <i> with underscores,
+                // so an HTML-formatted choice would be imported with its markup baked in.
+                $text = self::html_fragment_to_plain($text);
             }
             $qo->answer[] = trim($text);
             $qo->fraction[] = $ans->fraction;
@@ -561,7 +563,7 @@ class qtype_ddto_chill extends question_type {
         $partcount = count($parts);
         for ($i = 0; $i < $partcount; $i++) {
             if ($i % 2 === 0) {
-                $plain = html_to_text($parts[$i], 0, false);
+                $plain = self::html_fragment_to_plain($parts[$i]);
                 $source .= $plain;
                 foreach (self::word_list($plain) as $word) {
                     $words[] = $word;
@@ -588,6 +590,23 @@ class qtype_ddto_chill extends question_type {
         $result->gapindices = $gapindices;
         $result->labels = $labels;
         return $result;
+    }
+
+    /**
+     * Turn a stored question text fragment back into the plain text the author typed.
+     *
+     * This is the exact inverse of what {@see build_from_source()} writes. html_to_text()
+     * cannot be used here: it trims each fragment, so the spaces around every gap would be
+     * lost and the words on either side would end up glued together when the question is
+     * saved again.
+     *
+     * @param string $html a fragment of the stored question text, between two placeholders.
+     * @return string the plain text, with its whitespace intact.
+     */
+    public static function html_fragment_to_plain(string $html): string {
+        // nl2br() keeps the newline it tags, so a <br /> that is followed by one is a single line break.
+        $plain = preg_replace('~<br\s*/?>(\r\n|\r|\n)?~i', "\n", $html);
+        return html_entity_decode(strip_tags($plain), ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 
     /**

@@ -30,6 +30,7 @@ $string['allornothing_help'] = 'If enabled, the full mark is awarded only when e
 $string['blank'] = 'Leave blank';
 $string['choiceno'] = 'Distractor {$a}';
 $string['choiceplaceholder'] = 'Distractor text (plain text, no HTML)';
+$string['correctansweris'] = 'The correct answer is: {$a}';
 $string['detectgaps'] = 'Detect words';
 $string['distractorno'] = 'Distractor {$a}';
 $string['distractors'] = 'Distractors';

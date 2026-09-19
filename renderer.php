@@ -203,6 +203,6 @@ class qtype_ddto_chill_renderer extends qtype_renderer {
         if (empty($bits)) {
             return '';
         }
-        return get_string('correctansweris', 'question', implode(', ', $bits));
+        return get_string('correctansweris', 'qtype_ddto_chill', implode(', ', $bits));
     }
 }

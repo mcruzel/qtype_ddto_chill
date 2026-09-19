@@ -46,6 +46,9 @@ class qtype_ddto_chill_edit_form extends question_edit_form {
     /** @var string[] the negative markings offered, as fractions, from none to -100%. */
     const NEGATIVE_MARKING_OPTIONS = ['0.0', '-0.05', '-0.1', '-0.2', '-0.25', '-0.3333333', '-0.5', '-0.75', '-1.0'];
 
+    /** @var string stand-in question text used while the author has not typed a sentence yet. */
+    const PLACEHOLDER_QUESTIONTEXT = '<p></p>';
+
     /** @var stdClass|null reconstructed source of the question being edited, if any. */
     protected $reconstructed = null;
 
@@ -157,6 +160,19 @@ class qtype_ddto_chill_edit_form extends question_edit_form {
         );
         $mform->addHelpButton('shuffleanswers', 'shuffleanswers', 'qtype_ddto_chill');
         $mform->setDefault('shuffleanswers', $this->get_default_value('shuffleanswers', 1));
+    }
+
+    #[\Override]
+    public function set_data($question) {
+        // question_edit_form::set_data() reads the questiontext element back when the
+        // question carries no text yet, which is every new question. That element has
+        // been replaced by hidden fields here, and reading a missing element raises a
+        // QuickForm error (fatal on PHP 8). Seed the text instead: the real one is
+        // generated on save from the sentence typed by the author.
+        if (empty($question->questiontext)) {
+            $question->questiontext = self::PLACEHOLDER_QUESTIONTEXT;
+        }
+        parent::set_data($question);
     }
 
     /**

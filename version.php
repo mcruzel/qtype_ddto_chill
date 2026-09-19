@@ -25,8 +25,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'qtype_ddto_chill';
-$plugin->version = 2026091901;
+$plugin->version = 2026091902;
 $plugin->requires = 2022041900; // Moodle 4.0 and later.
 $plugin->supported = [400, 502];
 $plugin->maturity = MATURITY_ALPHA;
-$plugin->release = '1.0.0-alpha2';
+$plugin->release = '1.0.0-alpha3';

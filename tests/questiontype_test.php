@@ -271,6 +271,9 @@ final class questiontype_test extends \advanced_testcase {
         $cat = $generator->create_question_category([]);
         $fromform->category = "{$cat->id},{$cat->contextid}";
         $fromform->status = \core_question\local\bank\question_version_status::QUESTION_STATUS_READY;
+        // save_question() expects the editor-shaped question text the form submits;
+        // a plain import leaves it as a string and core would then store an empty text.
+        $fromform->questiontext = ['text' => $fromform->questiontext, 'format' => FORMAT_HTML];
 
         $question = new \stdClass();
         $question->qtype = 'ddto_chill';
@@ -299,9 +302,11 @@ final class questiontype_test extends \advanced_testcase {
         $question->createdby = 2;
         $form = $this->get_editing_form($cat, $question);
         $this->assertInstanceOf(qtype_ddto_chill_edit_form::class, $form);
-        $this->assertFalse($form->_form->elementExists('questiontext'));
-        $this->assertTrue($form->_form->elementExists('sourcetext'));
-        $this->assertTrue($form->_form->elementExists('questiontext[text]'));
+        // moodleform::$_form is protected, so reach it the way a test may.
+        $mform = (new \ReflectionProperty($form, '_form'))->getValue($form);
+        $this->assertFalse($mform->elementExists('questiontext'));
+        $this->assertTrue($mform->elementExists('sourcetext'));
+        $this->assertTrue($mform->elementExists('questiontext[text]'));
     }
 
     public function test_form_validation(): void {
@@ -351,6 +356,12 @@ final class questiontype_test extends \advanced_testcase {
             'canmove' => true, 'cansaveasnew' => true, 'canedit' => true, 'repeatelements' => true,
         ];
         $questiondata->beingcopied = false;
+        // question_has_capability_on(), called while the tag fields are added, resolves the
+        // question through its context, so the data has to carry one.
+        $questiondata->contextid = $cat->contextid;
+        // Question data that never went through the database has no question bank entry,
+        // which question_edit_form looks up unless the category object is supplied.
+        $questiondata->categoryobject = $cat;
         $contexts = new \core_question\local\bank\question_edit_contexts(\context::instance_by_id($cat->contextid));
         return $this->qtype->create_editing_form('question.php', $questiondata, $cat, $contexts, true);
     }

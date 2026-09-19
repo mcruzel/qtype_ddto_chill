@@ -36,7 +36,6 @@ class backup_qtype_ddto_chill_plugin extends backup_qtype_plugin {
      *
      * @return backup_plugin_element
      */
-    #[\Override]
     protected function define_question_plugin_structure() {
         $plugin = $this->get_plugin_element(null, '../../qtype', 'ddto_chill');
         $pluginwrapper = new backup_nested_element($this->get_recommended_name());

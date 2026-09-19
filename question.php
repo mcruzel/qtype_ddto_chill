@@ -277,16 +277,6 @@ class qtype_ddto_chill_question extends question_graded_automatically {
         return $response;
     }
 
-    #[\Override]
-    public function compute_final_grade($responses, $totaltries) {
-        $fraction = 0.0;
-        foreach ($responses as $response) {
-            [$fraction] = $this->grade_response($response);
-        }
-        $tries = count($responses);
-        return max(0, $fraction - ($tries - 1) * $this->penalty);
-    }
-
     /**
      * Count the correctly and incorrectly filled gaps in a response.
      *
