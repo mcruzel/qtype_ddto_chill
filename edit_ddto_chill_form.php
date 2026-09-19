@@ -216,12 +216,12 @@ class qtype_ddto_chill_edit_form extends question_edit_form {
      */
     protected function reconstruct_current_question(): ?stdClass {
         if (empty($this->question->options->choices) || empty($this->question->questiontext)) {
-            $source = $this->optional_param('sourcetext', '', PARAM_RAW);
+            $source = optional_param('sourcetext', '', PARAM_RAW);
             if ($source === '') {
                 return null;
             }
             $words = qtype_ddto_chill::word_list($source);
-            $selection = $this->optional_param('gapselection', '', PARAM_SEQUENCE);
+            $selection = optional_param('gapselection', '', PARAM_SEQUENCE);
             $gapindices = [];
             if ($selection !== '') {
                 foreach (explode(',', $selection) as $bit) {
