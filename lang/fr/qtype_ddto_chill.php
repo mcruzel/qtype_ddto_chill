@@ -30,6 +30,7 @@ $string['allornothing_help'] = 'Si cette option est activée, la note complète 
 $string['blank'] = 'Laisser vide';
 $string['choiceno'] = 'Distracteur {$a}';
 $string['choiceplaceholder'] = 'Texte du distracteur (texte brut, sans HTML)';
+$string['correctansweris'] = 'La réponse correcte est : {$a}';
 $string['detectgaps'] = 'Détecter les mots';
 $string['distractorno'] = 'Distracteur {$a}';
 $string['distractors'] = 'Distracteurs';

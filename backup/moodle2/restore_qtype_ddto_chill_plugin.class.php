@@ -40,7 +40,6 @@ class restore_qtype_ddto_chill_plugin extends restore_qtype_plugin {
      *
      * @return restore_path_element[]
      */
-    #[\Override]
     protected function define_question_plugin_structure() {
         $paths = [];
         $paths[] = new restore_path_element('ddto_chill_options', $this->get_pathfor('/ddto_chill_options'));
