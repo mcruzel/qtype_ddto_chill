@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.0-alpha2
+
+- Fix the question editing form hanging on a blank loading spinner when adding
+  a question: the core `questiontext` editor is no longer rendered (and then
+  hidden with `display:none`), which blocked TinyMCE/Atto `Pending` from resolving.
+- Fix a PHP 8.1+ TypeError on `count($this->question->options->answers)` when
+  the edit form is built for a question that only has `options->choices`.
+
 ## 1.0.0-alpha1
 
 - First version of the autonomous `qtype_ddto_chill` question type.
